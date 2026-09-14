@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Voting OSIS SMPN 2 Kampung Laut</title>
+    <!-- Memuat Chart.js untuk Diagram Batang -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; background: white; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 20px; margin-bottom: 20px; position: relative; }
+        .header img { width: 100px; height: auto; margin-bottom: 10px; }
+        .header h1 { color: #2c3e50; font-size: 26px; margin: 0 0 5px 0; }
+        .header h2 { color: #7f8c8d; font-size: 18px; margin: 0; font-weight: normal; }
+        
+        .section { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .active { display: block; text-align: center; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Login Screen */
+        .login-box { max-width: 400px; margin: 40px auto; padding: 20px; border: 1px solid #e1e8ed; border-radius: 8px; background: #fafafa; }
+        input[type="number"], input[type="password"] { width: 90%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
+        .btn { background: #3498db; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-bottom: 10px;}
+        .btn:hover { background: #2980b9; }
+        .btn-warning { background: #e67e22; }
+        .btn-warning:hover { background: #d35400; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        .error { color: #e74c3c; font-size: 14px; display: none; margin-bottom: 10px; }
+
+        /* Candidate Cards */
+        .kandidat-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
+        .kandidat-card { background: white; border: 1px solid #e1e8ed; border-radius: 10px; width: 300px; text-align: left; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; transition: transform 0.2s; }
+        .kandidat-card:hover { transform: translateY(-5px); }
+        .kandidat-header { background: #3498db; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+        
+        /* Style Foto Kandidat */
+        .kandidat-img { width: 100%; height: 280px; object-fit: cover; border-bottom: 3px solid #f0f2f5; background-color: #e1e8ed; }
+        
+        .kandidat-body { padding: 15px; flex-grow: 1; font-size: 14px; }
+        .kandidat-body h4 { color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px; margin: 15px 0 5px 0; font-size: 15px; }
+        .kandidat-body h4:first-child { margin-top: 0; }
+        .kandidat-body p, .kandidat-body ul { margin: 0 0 10px 0; color: #555; line-height: 1.5; }
+        .kandidat-body ul { padding-left: 20px; }
+        .btn-pilih { background: #2ecc71; border-radius: 0; padding: 15px; font-size: 18px; }
+        .btn-pilih:hover { background: #27ae60; }
+
+        /* Dashboard */
+        .dashboard-box { background: #fafafa; border: 1px solid #e1e8ed; border-radius: 8px; padding: 20px; margin-top: 20px; }
+        .chart-container { position: relative; height: 400px; width: 100%; margin-top: 20px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+        .rekap-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        .rekap-table th, .rekap-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        .rekap-table th { background-color: #3498db; color: white; }
+        .rekap-table tr:nth-child(even) { background-color: #f9f9f9; }
+
+        /* Footer */
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e1e8ed; display: flex; justify-content: space-between; font-size: 14px; color: #2c3e50; text-align: center; position: relative;}
+        .ttd-box { width: 200px; }
+        .ttd-name { font-weight: bold; margin-top: 50px; text-decoration: underline; }
+        .admin-link { position: absolute; right: 0; bottom: 0; font-size: 12px; color: #ccc; cursor: pointer; text-decoration: none; }
+        .admin-link:hover { color: #3498db; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img src="logo kamla2.png" alt="Logo SMP Negeri 2 Kampung Laut">
+            <h1>Pemilihan Ketua OSIS</h1>
+            <h2>SMP Negeri 2 Kampung Laut</h2>
+        </div>
+
+        <!-- Bagian 1: Verifikasi NISN -->
+        <div id="login-section" class="section active">
+            <div class="login-box">
+                <h3>Verifikasi Pemilih</h3>
+                <p style="font-size: 14px; color: #7f8c8d;">Silakan masukkan NISN Anda. Setiap siswa hanya dapat memilih satu kali.</p>
+                <p id="error-msg" class="error">NISN tidak valid atau sudah digunakan!</p>
+                <input type="number" id="nisn-input" placeholder="Masukkan NISN Anda..." required>
+                <button class="btn" onclick="validasiLogin()">Masuk & Pilih Kandidat</button>
+            </div>
+        </div>
+
+        <!-- Bagian 2: Daftar Kandidat -->
+        <div id="voting-section" class="section">
+            <h3>Daftar Kandidat Ketua OSIS</h3>
+            <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 20px;">Pelajari Visi, Misi, dan Tujuan program sebelum menentukan pilihan Anda.</p>
+            <div class="kandidat-container" id="kandidat-list">
+                <!-- Data kandidat akan dimuat melalui JavaScript -->
+            </div>
+        </div>
+
+        <!-- Bagian 3: Sukses -->
+        <div id="success-section" class="section">
+            <div class="login-box" style="border-color: #2ecc71;">
+                <h2 style="color: #2ecc71;">Terima Kasih!</h2>
+                <p>Suara Anda telah berhasil direkam ke dalam sistem e-Voting.</p>
+                <button class="btn" style="background: #95a5a6;" onclick="resetAplikasi()">Kembali ke Halaman Awal</button>
+            </div>
+        </div>
+
+        <!-- Bagian 4: Dashboard Admin -->
+        <div id="dashboard-section" class="section">
+            <h2 style="color: #2c3e50;">Dashboard Rekapitulasi Pemilih</h2>
+            <div class="dashboard-box">
+                <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; text-align: left; margin-bottom: 20px;">
+                    <h3 id="total-suara" style="margin: 0; color: #2980b9;">Total Partisipasi Pemilih: 0 Siswa</h3>
+                </div>
+                
+                <table class="rekap-table">
+                    <thead>
+                        <tr>
+                            <th>No. Urut</th>
+                            <th>Nama Kandidat</th>
+                            <th>Perolehan Suara</th>
+                            <th>Persentase</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rekap-body">
+                        <!-- Tabel dimuat via JS -->
+                    </tbody>
+                </table>
+
+                <div class="chart-container">
+                    <canvas id="barChart"></canvas>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn btn-warning" style="width: auto;" onclick="resetAplikasi()">Tutup Dashboard</button>
+                    <button class="btn btn-danger" style="width: auto;" onclick="hapusSemuaData()">Reset Data (Hapus Semua Suara)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="ttd-box">
+                Mengetahui,<br>Kepala Sekolah
+                <div class="ttd-name">Oni Prastyanto, S.Pd.</div>
+            </div>
+            <div class="ttd-box">
+                <br>Operator Sekolah
+                <div class="ttd-name">Ari Bernadi, S.Pd.</div>
+            </div>
+            <!-- Tombol rahasia untuk buka dashboard -->
+            <a class="admin-link" onclick="bukaDashboard()">Admin Panel</a>
+        </div>
+    </div>
+
+    <script>
+        // Database Lokal (Memori Browser)
+        let pemilihSudahVote = JSON.parse(localStorage.getItem("dataPemilih")) || [];
+        let hasilSuara = JSON.parse(localStorage.getItem("hasilSuara")) || {1:0, 2:0, 3:0, 4:0, 5:0};
+        let currentNISN = "";
+        let chartInstance = null;
+
+        // Data Kandidat (Nama, Foto, Visi, Misi, Tujuan)
+        const kandidat = [
+            {
+                id: 1, 
+                nama: "Pratikno Subagyo",
+                foto: "kandidat1.jpg", 
+                visi: "Mewujudkan OSIS yang aktif, kreatif, dan berakhlak mulia.",
+                misi: ["Kegiatan keagamaan rutin.", "Meningkatkan kedisiplinan.", "Lomba antar kelas."],
+                tujuan: "Menciptakan lingkungan yang harmonis dan berprestasi."
+            },
+            {
+                id: 2, 
+                nama: "Rifqi Rohardian",
+                foto: "kandidat2.jpg",
+                visi: "Menjadikan siswa-siswi peduli lingkungan dan tanggap teknologi.",
+                misi: ["Jumat bersih dan bank sampah.", "Pelatihan desain grafis.", "Mading digital sekolah."],
+                tujuan: "Membangun karakter siswa yang sehat dan melek digital."
+            },
+            {
+                id: 3, 
+                nama: "Adi Fudiana",
+                foto: "kandidat3.jpg",
+                visi: "Menjadikan OSIS sebagai wadah aspirasi & minat bakat.",
+                misi: ["Mengaktifkan ekskul vakum.", "Kotak saran digital.", "Pentas seni tahunan."],
+                tujuan: "Menggali potensi terpendam siswa SMPN 2 Kampung Laut."
+            },
+            {
+                id: 4, 
+                nama: "Leli Sutarti",
+                foto: "kandidat4.jpg",
+                visi: "Membangun budaya literasi dan kewirausahaan siswa.",
+                misi: ["Bazar karya siswa.", "Klub buku dan diskusi.", "Kerjasama perpustakaan."],
+                tujuan: "Mencetak siswa mandiri dan berwawasan luas."
+            },
+            {
+                id: 5, 
+                nama: "Maryatun",
+                foto: "kandidat5.jpg",
+                visi: "Mewujudkan sekolah ramah anak dan menjunjung sportivitas.",
+                misi: ["Turnamen olahraga rutin.", "Kampanye anti-bullying.", "Senam sehat bersama."],
+                tujuan: "Menciptakan siswa yang sehat jasmani dan rohani."
+            }
+        ];
+
+        function validasiLogin() {
+            const input = document.getElementById('nisn-input').value;
+            const errorMsg = document.getElementById('error-msg');
+            
+            if(input.length < 5) {
+                errorMsg.innerText = "Masukkan NISN yang valid!";
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            if (pemilihSudahVote.includes(input)) {
+                errorMsg.innerText = "Maaf, NISN ini sudah digunakan untuk memilih.";
+                errorMsg.style.display = "block";
+            } else {
+                errorMsg.style.display = "none";
+                currentNISN = input;
+                tampilkanKandidat();
+                gantiLayar('voting-section');
+            }
+        }
+
+        function tampilkanKandidat() {
+            const container = document.getElementById('kandidat-list');
+            container.innerHTML = ""; 
+
+            kandidat.forEach(k => {
+                let misiList = k.misi.map(m => `<li>${m}</li>`).join('');
+                const card = `
+                    <div class="kandidat-card">
+                        <div class="kandidat-header">Kandidat ${k.id}: ${k.nama}</div>
+                        <img src="${k.foto}" alt="Foto ${k.nama}" class="kandidat-img" onerror="this.src='https://via.placeholder.com/300x280?text=Foto+Kandidat+${k.id}'">
+                        <div class="kandidat-body">
+                            <h4>Visi</h4><p>${k.visi}</p>
+                            <h4>Misi</h4><ul>${misiList}</ul>
+                            <h4>Tujuan Program</h4><p>${k.tujuan}</p>
+                        </div>
+                        <button class="btn btn-pilih" onclick="pilihKandidat(${k.id})">PILIH KANDIDAT ${k.id}</button>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function pilihKandidat(idKandidat) {
+            let namaPilihan = kandidat.find(k => k.id === idKandidat).nama;
+            if(confirm(`Apakah Anda yakin memilih Kandidat ${idKandidat} (${namaPilihan})? Pilihan tidak dapat diubah.`)) {
+                // Catat NISN Pemilih
+                pemilihSudahVote.push(currentNISN);
+                localStorage.setItem("dataPemilih", JSON.stringify(pemilihSudahVote));
+                
+                // Tambah Suara Kandidat
+                hasilSuara[idKandidat] = (hasilSuara[idKandidat] || 0) + 1;
+                localStorage.setItem("hasilSuara", JSON.stringify(hasilSuara));
+                
+                gantiLayar('success-section');
+            }
+        }
+
+        function bukaDashboard() {
+            let pin = prompt("Masukkan PIN Admin (Default: kamla2):");
+            if (pin === "kamla2") { 
+                renderDashboard();
+                gantiLayar('dashboard-section');
+            } else if (pin !== null) {
+                alert("PIN Salah!");
+            }
+        }
+
+        function renderDashboard() {
+            let totalSuara = pemilihSudahVote.length;
+            document.getElementById('total-suara').innerText = `Total Partisipasi Pemilih: ${totalSuara} Siswa`;
+
+            const tbody = document.getElementById('rekap-body');
+            tbody.innerHTML = "";
+            let labels = [];
+            let dataSuara = [];
+
+            kandidat.forEach(k => {
+                let labelKandidat = `${k.id}. ${k.nama}`;
+                let suara = hasilSuara[k.id] || 0;
+                let persentase = totalSuara === 0 ? 0 : ((suara / totalSuara) * 100).toFixed(1);
+                
+                labels.push(labelKandidat);
+                dataSuara.push(suara);
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${k.id}</b></td>
+                        <td>${k.nama}</td>
+                        <td><b>${suara}</b> Suara</td>
+                        <td>${persentase}%</td>
+                    </tr>
+                `;
+            });
+
+            // Render Grafik Chart.js
+            const ctx = document.getElementById('barChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy(); 
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Perolehan Suara',
+                        data: dataSuara,
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)', 'rgba(46, 204, 113, 0.8)',
+                            'rgba(155, 89, 182, 0.8)', 'rgba(241, 196, 15, 0.8)',
+                            'rgba(231, 76, 60, 0.8)'
+                        ],
+                        borderColor: [
+                            '#2980b9', '#27ae60', '#8e44ad', '#f39c12', '#c0392b'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Grafik Perolehan Suara Pemilihan OSIS', font: { size: 16 } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function hapusSemuaData() {
+            if(confirm("PERINGATAN! Anda akan menghapus seluruh data suara dan pemilih. Yakin ingin melanjutkan?")) {
+                if(confirm("Data yang dihapus tidak bisa dikembalikan. Lanjutkan?")) {
+                    localStorage.removeItem("dataPemilih");
+                    localStorage.removeItem("hasilSuara");
+                    
+                    pemilihSudahVote = [];
+                    hasilSuara = {1:0, 2:0, 3:0, 4:0, 5:0};
+                    
+                    alert("Data pemilih dan perolehan suara berhasil direset!");
+                    renderDashboard(); 
+                }
+            }
+        }
+
+        function resetAplikasi() {
+            document.getElementById('nisn-input').value = "";
+            currentNISN = "";
+            gantiLayar('login-section');
+        }
+
+        function gantiLayar(idLayar) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(idLayar).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
